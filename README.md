@@ -116,14 +116,3 @@ final caid = await DnSignals.instance.getCaid(); // iOS only
 ```
 
 不支持的平台会返回 `null` 或执行空操作。
-
-## 发布前检查
-
-```bash
-dart format .
-flutter analyze
-flutter test
-flutter pub publish --dry-run
-```
-
-发布到 pub.dev 前，请确认你有权随包分发内置的 Android jar/so 和 iOS 静态库。
