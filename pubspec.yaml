@@ -1,6 +1,6 @@
 name: dn_signals
 description: "Flutter plugin wrapper for Tencent DataNexus/GDT Action SDK conversion reporting."
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/wjneng
 
 environment:

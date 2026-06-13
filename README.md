@@ -16,7 +16,7 @@
 
 ```yaml
 dependencies:
-  dn_signals: ^0.0.1
+  dn_signals: ^0.0.2
 ```
 
 ## 平台配置

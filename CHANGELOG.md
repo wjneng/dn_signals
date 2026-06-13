@@ -1,3 +1,7 @@
+## 0.0.2
+
+* Improve documentation for initialization requirements and reporting semantics.
+
 ## 0.0.1
 
 * Initial release.
