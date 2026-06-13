@@ -62,6 +62,8 @@ Future<void> main() async {
 
 Android 厂商文档建议初始化尽量发生在 Application 启动阶段，且必须在其他上报接口前调用。Flutter 项目中请确保先 `initialize()`，再调用 `start()` 或任何上报方法。
 
+如果未先调用 `initialize()` 就调用 `start()`、`logAction()` 或便捷事件方法，插件会在 Flutter 侧直接抛出 `StateError`。这些方法返回成功只表示调用已交给原生 SDK，不代表厂商服务端已经完成归因或入库。
+
 ## 标准/自定义行为上报
 
 ```dart

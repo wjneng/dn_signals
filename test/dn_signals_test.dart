@@ -142,6 +142,10 @@ class MockDnSignalsPlatform
 }
 
 void main() {
+  tearDown(() {
+    DnSignals.instance.resetForTesting();
+  });
+
   test('$MethodChannelDnSignals is the default instance', () {
     expect(DnSignalsPlatform.instance, isInstanceOf<MethodChannelDnSignals>());
   });
@@ -156,11 +160,25 @@ void main() {
 
     expect(fakePlatform.config?.actionSetId, 'set-id');
     expect(fakePlatform.config?.secretKey, 'secret');
+    expect(DnSignals.instance.isInitialized, isTrue);
+  });
+
+  test('logAction throws before initialize', () {
+    final fakePlatform = MockDnSignalsPlatform();
+    DnSignalsPlatform.instance = fakePlatform;
+
+    expect(
+      () => DnSignals.instance.logAction(DnSignalAction.purchase),
+      throwsA(isA<StateError>()),
+    );
   });
 
   test('logAction delegates action and parameters to platform', () async {
     final fakePlatform = MockDnSignalsPlatform();
     DnSignalsPlatform.instance = fakePlatform;
+    await DnSignals.instance.initialize(
+      const DnSignalsConfig(actionSetId: 'set-id', secretKey: 'secret'),
+    );
 
     await DnSignals.instance.logAction(
       DnSignalAction.purchase,

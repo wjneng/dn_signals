@@ -13,6 +13,7 @@ import org.json.JSONObject
 class DnSignalsPlugin : FlutterPlugin, MethodCallHandler {
     private lateinit var channel: MethodChannel
     private lateinit var appContext: Context
+    private var isInitialized = false
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         appContext = flutterPluginBinding.applicationContext
@@ -22,6 +23,15 @@ class DnSignalsPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         try {
+            if (requiresInitialized(call.method) && !isInitialized) {
+                result.error(
+                    "NOT_INITIALIZED",
+                    "Call DnSignals.initialize() before ${call.method}.",
+                    null
+                )
+                return
+            }
+
             when (call.method) {
                 "initialize" -> initialize(call, result)
                 "start" -> {
@@ -181,6 +191,7 @@ class DnSignalsPlugin : FlutterPlugin, MethodCallHandler {
         } else {
             GDTAction.init(appContext, actionSetId, secretKey, channelValue)
         }
+        isInitialized = true
         result.success(null)
     }
 
@@ -198,6 +209,12 @@ class DnSignalsPlugin : FlutterPlugin, MethodCallHandler {
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+    }
+
+    private fun requiresInitialized(method: String): Boolean {
+        return method == "start" ||
+            method == "logAction" ||
+            method.startsWith("report")
     }
 }
 

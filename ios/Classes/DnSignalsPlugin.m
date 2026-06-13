@@ -2,6 +2,10 @@
 #import "GDTAction.h"
 #import "GDTAction+convenience.h"
 
+@interface DnSignalsPlugin ()
+@property(nonatomic, assign) BOOL isInitialized;
+@end
+
 @implementation DnSignalsPlugin
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
@@ -14,6 +18,13 @@
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   @try {
+    if ([self requiresInitialized:call.method] && !self.isInitialized) {
+      result([FlutterError errorWithCode:@"NOT_INITIALIZED"
+                                 message:[NSString stringWithFormat:@"Call DnSignals.initialize() before %@.", call.method]
+                                 details:nil]);
+      return;
+    }
+
     if ([@"initialize" isEqualToString:call.method]) {
       [self initialize:call result:result];
     } else if ([@"start" isEqualToString:call.method]) {
@@ -49,6 +60,7 @@
   NSString* actionSetId = [self requiredString:args key:@"actionSetId"];
   NSString* secretKey = [self requiredString:args key:@"secretKey"];
   [GDTAction init:actionSetId secretKey:secretKey];
+  self.isInitialized = YES;
   result(nil);
 }
 
@@ -142,6 +154,12 @@
 
   result(nil);
   return YES;
+}
+
+- (BOOL)requiresInitialized:(NSString*)method {
+  return [@"start" isEqualToString:method] ||
+         [@"logAction" isEqualToString:method] ||
+         [method hasPrefix:@"report"];
 }
 
 - (NSDictionary*)requiredDictionary:(id)value {

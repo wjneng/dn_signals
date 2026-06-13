@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'dn_signals_platform_interface.dart';
 import 'src/dn_signal_action.dart';
 import 'src/dn_signals_config.dart';
@@ -14,17 +16,31 @@ class DnSignals {
 
   static final DnSignals instance = DnSignals._();
 
+  bool _isInitialized = false;
+
+  /// 当前 Flutter 侧是否已经调用并完成 [initialize]。
+  ///
+  /// 这个状态只表示插件已把初始化请求交给原生 SDK，不代表厂商服务端归因成功。
+  bool get isInitialized => _isInitialized;
+
+  @visibleForTesting
+  void resetForTesting() {
+    _isInitialized = false;
+  }
+
   /// 初始化广点通转化 SDK。
   ///
   /// [actionSetId] 和 [secretKey] 均应由业务 App 在运行时传入，不建议硬编码
   /// 到插件内部。Android 侧 SDK 文档建议在 Application.onCreate 阶段初始化；
   /// Flutter 项目通常可在 `main()` 中 `runApp` 前调用。
-  Future<void> initialize(DnSignalsConfig config) {
-    return DnSignalsPlatform.instance.initialize(config);
+  Future<void> initialize(DnSignalsConfig config) async {
+    await DnSignalsPlatform.instance.initialize(config);
+    _isInitialized = true;
   }
 
   /// 启动 SDK 数据上报。
   Future<void> start() {
+    _ensureInitialized('start');
     return DnSignalsPlatform.instance.start();
   }
 
@@ -35,6 +51,7 @@ class DnSignals {
     String actionName, {
     Map<String, Object?>? parameters,
   }) {
+    _ensureInitialized('logAction');
     return DnSignalsPlatform.instance.logAction(
       actionName,
       parameters: parameters,
@@ -80,6 +97,7 @@ class DnSignals {
     required String method,
     required bool isSuccess,
   }) {
+    _ensureInitialized('reportRegister');
     return DnSignalsPlatform.instance.reportRegister(
       method: method,
       isSuccess: isSuccess,
@@ -87,6 +105,7 @@ class DnSignals {
   }
 
   Future<void> reportLogin({required String method, required bool isSuccess}) {
+    _ensureInitialized('reportLogin');
     return DnSignalsPlatform.instance.reportLogin(
       method: method,
       isSuccess: isSuccess,
@@ -97,6 +116,7 @@ class DnSignals {
     required String type,
     required bool isSuccess,
   }) {
+    _ensureInitialized('reportBindAccount');
     return DnSignalsPlatform.instance.reportBindAccount(
       type: type,
       isSuccess: isSuccess,
@@ -111,6 +131,7 @@ class DnSignals {
     required String description,
     required bool isSuccess,
   }) {
+    _ensureInitialized('reportQuestFinish');
     return DnSignalsPlatform.instance.reportQuestFinish(
       questId: questId,
       questType: questType,
@@ -122,10 +143,12 @@ class DnSignals {
   }
 
   Future<void> reportCreateRole(String role) {
+    _ensureInitialized('reportCreateRole');
     return DnSignalsPlatform.instance.reportCreateRole(role);
   }
 
   Future<void> reportUpdateLevel(int level) {
+    _ensureInitialized('reportUpdateLevel');
     return DnSignalsPlatform.instance.reportUpdateLevel(level);
   }
 
@@ -134,6 +157,7 @@ class DnSignals {
     required String contentName,
     required String contentId,
   }) {
+    _ensureInitialized('reportViewContent');
     return DnSignalsPlatform.instance.reportViewContent(
       contentType: contentType,
       contentName: contentName,
@@ -148,6 +172,7 @@ class DnSignals {
     required int contentNumber,
     required bool isSuccess,
   }) {
+    _ensureInitialized('reportAddToCart');
     return DnSignalsPlatform.instance.reportAddToCart(
       contentType: contentType,
       contentName: contentName,
@@ -167,6 +192,7 @@ class DnSignals {
     required String realCurrencyType,
     required bool isSuccess,
   }) {
+    _ensureInitialized('reportCheckout');
     return DnSignalsPlatform.instance.reportCheckout(
       contentType: contentType,
       contentName: contentName,
@@ -189,6 +215,7 @@ class DnSignals {
     required int currencyAmount,
     required bool isSuccess,
   }) {
+    _ensureInitialized('reportPurchase');
     return DnSignalsPlatform.instance.reportPurchase(
       contentType: contentType,
       contentName: contentName,
@@ -205,6 +232,7 @@ class DnSignals {
     required String channel,
     required bool isSuccess,
   }) {
+    _ensureInitialized('reportAddPaymentChannel');
     return DnSignalsPlatform.instance.reportAddPaymentChannel(
       channel: channel,
       isSuccess: isSuccess,
@@ -212,13 +240,24 @@ class DnSignals {
   }
 
   Future<void> reportRate(double rate) {
+    _ensureInitialized('reportRate');
     return DnSignalsPlatform.instance.reportRate(rate);
   }
 
   Future<void> reportShare({required String channel, required bool isSuccess}) {
+    _ensureInitialized('reportShare');
     return DnSignalsPlatform.instance.reportShare(
       channel: channel,
       isSuccess: isSuccess,
     );
+  }
+
+  void _ensureInitialized(String methodName) {
+    if (!_isInitialized) {
+      throw StateError(
+        'DnSignals.$methodName() called before initialize(). '
+        'Call DnSignals.instance.initialize(...) first.',
+      );
+    }
   }
 }
